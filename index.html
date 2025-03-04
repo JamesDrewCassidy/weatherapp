@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drew's Weather Forecast</title>
+  <style>
+    /* --------------------
+       BASIC RESET & LAYOUT
+       -------------------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      /* A subtle gradient background */
+      background: linear-gradient(to bottom right, #f6f7f8, #e9eced);
+      color: #333;
+    }
+    header, main, footer {
+      max-width: 1000px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    /* --------------------
+       HEADER STYLING
+       -------------------- */
+    header {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-top: 2rem;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+      color: #333;
+    }
+    header p {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    /* --------------------
+       WEATHER CONTAINER
+       -------------------- */
+    .weather-container {
+      background-color: #fff;
+      padding: 2rem;
+      margin-top: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: box-shadow 0.3s;
+    }
+    .weather-container:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .weather-container h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.6rem;
+      color: #333;
+    }
+
+    /* --------------------
+       SEARCH & RESULTS
+       -------------------- */
+    .weather-search {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .weather-search input {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 60%;
+      max-width: 300px;
+      transition: border-color 0.3s;
+    }
+    .weather-search input:focus {
+      outline: none;
+      border-color: #4285f4;
+    }
+    .weather-search button {
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-left: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      background-color: #4285f4;
+      color: #fff;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .weather-search button:hover {
+      background-color: #3367d6;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    .search-results {
+      margin: 0.5rem auto 0 auto;
+      text-align: left;
+      display: none; /* Hidden until we have results */
+      width: 80%;
+      max-width: 400px;
+      background: #fafafa;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .search-results p {
+      margin: 0;
+      padding: 0.7rem 0.7rem;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-results p:hover {
+      background: #e7e7e7;
+    }
+
+    /* --------------------
+       PREFERRED LOCATION
+       -------------------- */
+    .preferred-location {
+      margin: 1rem 0;
+      font-size: 0.95rem;
+      color: #555;
+      text-align: center;
+    }
+    .preferred-location button {
+      margin-left: 0.5rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      border: none;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .preferred-location button:hover {
+      background: #666;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* --------------------
+       CURRENT WEATHER & FORECAST
+       -------------------- */
+    .weather-current,
+    .weather-forecast {
+      margin-top: 2rem;
+      text-align: center;
+      transition: opacity 0.3s;
+    }
+    .weather-current strong {
+      font-size: 1.2rem;
+      color: #333;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .emoji {
+      font-size: 1.8rem;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    .error-message {
+      color: red;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    /* --------------------
+       7-DAY FORECAST TABLE
+       -------------------- */
+    .forecast-table {
+      width: 100%;
+      max-width: 700px;
+      margin: 1.5rem auto 0;
+      border-collapse: collapse;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .forecast-table th,
+    .forecast-table td {
+      border: 1px solid #ddd;
+      padding: 0.8rem;
+      text-align: center;
+      font-size: 0.95rem;
+      vertical-align: middle;
+    }
+    .forecast-table th {
+      background: #eef6fb;
+      color: #444;
+    }
+    .forecast-table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .forecast-table tbody tr:hover {
+      background: #f1f7fc;
+    }
+
+    /* --------------------
+       VIDEO CONTAINER
+       -------------------- */
+    .video-container {
+      margin: 2rem auto;
+      text-align: center;
+    }
+    .video-container h2 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+      color: #333;
+    }
+    iframe {
+      width: 100%;
+      max-width: 560px;
+      height: 315px;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* --------------------
+       FOOTER
+       -------------------- */
+    footer {
+      text-align: center;
+      margin: 2rem auto;
+      font-size: 0.9rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Drew's Weather Forecast (Fahrenheit Edition)</h1>
+    <p>Stay updated on weather conditions around the globe.</p>
+  </header>
+
+  <main>
+    <!-- Weather Section -->
+    <div class="weather-container">
+      <h2>Check the Weather</h2>
+      <!-- Search & Results -->
+      <div class="weather-search">
+        <input type="text" id="cityInput" placeholder="Enter city, state, or country" />
+        <button id="searchBtn">Search</button>
+        <button id="geoBtn" title="Use my current location">Use My Location</button>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+
+      <!-- Preferred Location -->
+      <div class="preferred-location" id="preferredLocation">
+        <!-- Populated dynamically if user has a saved location -->
+      </div>
+
+      <!-- Current Weather & Forecast -->
+      <div id="weatherCurrent" class="weather-current"></div>
+      <div id="weatherForecast" class="weather-forecast"></div>
+
+      <!-- Error Messages -->
+      <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <!-- Max Velocity (Weather YouTuber) Embed -->
+    <div class="video-container">
+      <h2>Live Weather Updates with Max Velocity</h2>
+      <iframe
+        src="https://www.youtube.com/embed/lmtVDcVlZbY?autoplay=1"
+        title="YouTube weather coverage by Max Velocity"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Drew's Weather Forecast. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // This script:
+    // 1) Uses Open-Meteo for geocoding, current weather & forecast (Fahrenheit).
+    // 2) Optionally tries MET Norway for current conditions & merges them with a 60/40 weighted average.
+    // 3) Falls back to Open-Meteo data if MET fails or returns null.
+    // 4) Uses emojis for conditions, a 7-day forecast (with day-of-week, sunrise/sunset, "feels like" temps),
+    //    plus localStorage for "preferred location," and geolocation button.
+
+    const cityInput = document.getElementById('cityInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const geoBtn = document.getElementById('geoBtn');
+    const searchResults = document.getElementById('searchResults');
+    const preferredLocationDiv = document.getElementById('preferredLocation');
+    const weatherCurrent = document.getElementById('weatherCurrent');
+    const weatherForecast = document.getElementById('weatherForecast');
+    const errorMessage = document.getElementById('errorMessage');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedLocation = JSON.parse(localStorage.getItem('preferredLocation'));
+      if (storedLocation) {
+        showPreferredLocationUI(storedLocation);
+        fetchWeatherForCoordinates(storedLocation.latitude, storedLocation.longitude, storedLocation.name);
+      }
+    });
+
+    searchBtn.addEventListener('click', performSearch);
+    geoBtn.addEventListener('click', useGeolocation);
+    cityInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+
+    function clearDisplayAreas() {
+      weatherCurrent.innerHTML = '';
+      weatherForecast.innerHTML = '';
+      errorMessage.textContent = '';
+      searchResults.innerHTML = '';
+      searchResults.style.display = 'none';
+    }
+
+    async function performSearch() {
+      clearDisplayAreas();
+      const query = cityInput.value.trim();
+      if (!query) {
+        errorMessage.textContent = 'Please enter a city, state, or country.';
+        return;
+      }
+      const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`;
+      try {
+        const res = await fetch(geocodeUrl);
+        if (!res.ok) throw new Error('Geocoding request failed.');
+        const data = await res.json();
+        if (!data.results || data.results.length === 0) {
+          errorMessage.textContent = 'No locations found. Try something else.';
+          return;
+        }
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'block';
+        data.results.forEach((loc) => {
+          const p = document.createElement('p');
+          let displayName = loc.name;
+          if (loc.admin1) displayName += `, ${loc.admin1}`;
+          if (loc.country) displayName += `, ${loc.country}`;
+          p.textContent = displayName;
+          p.addEventListener('click', () => {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
+            cityInput.value = displayName;
+            fetchWeatherForCoordinates(loc.latitude, loc.longitude, displayName);
+          });
+          searchResults.appendChild(p);
+        });
+      } catch (error) {
+        console.error(error);
+        errorMessage.textContent = 'Could not complete the search. Please try again.';
+      }
+    }
+
+    function useGeolocation() {
+      clearDisplayAreas();
+      if (!navigator.geolocation) {
+        errorMessage.textContent = 'Geolocation is not supported by this browser.';
+        return;
+      }
+      weatherCurrent.innerHTML = `<p>Fetching your location...</p>`;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          fetchWeatherForCoordinates(latitude, longitude, 'Your Location');
+        },
+        (err) => {
+          console.error(err);
+          weatherCurrent.innerHTML = '';
+          errorMessage.textContent = 'Unable to get your location.';
+        }
+      );
+    }
+
+    async function fetchWeatherForCoordinates(lat, lon, locationName) {
+      clearDisplayAreas();
+      weatherCurrent.innerHTML = `<p>Fetching weather for ${locationName}...</p>`;
+      try {
+        const openMeteoCurrent = await fetchOpenMeteoCurrent(lat, lon);
+        if (!openMeteoCurrent) {
+          weatherCurrent.innerHTML = '';
+          errorMessage.textContent = 'Could not retrieve weather data from Open-Meteo.';
+          return;
+        }
+
+        let metCurrent = null;
+        try {
+          metCurrent = await fetchMetNorwayCurrent(lat, lon);
+        } catch (e) {
+          console.warn('MET Norway request failed, skipping aggregator...');
+        }
+
+        // Weighted aggregator: 60% Open-Meteo, 40% MET (if MET is available).
+        const aggregatedCurrent = combineCurrentWeather(openMeteoCurrent, metCurrent, 0.6, 0.4);
+
+        // 7-day forecast from Open-Meteo
+        const dailyForecast = await fetchOpenMeteoForecast(lat, lon);
+
+        displayCurrentWeather(locationName, aggregatedCurrent);
+        if (!dailyForecast) {
+          errorMessage.textContent = 'No forecast data available.';
+        } else {
+          displayWeeklyForecast(dailyForecast);
+        }
+        showPreferredLocationUI({ latitude: lat, longitude: lon, name: locationName });
+      } catch (error) {
+        console.error(error);
+        weatherCurrent.innerHTML = '';
+        errorMessage.textContent = 'Could not retrieve weather data. Please try again.';
+      }
+    }
+
+    async function fetchOpenMeteoCurrent(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.current_weather) return null;
+      return {
+        temperature: data.current_weather.temperature,
+        windspeed: data.current_weather.windspeed,
+        winddirection: data.current_weather.winddirection,
+        weathercode: data.current_weather.weathercode,
+        time: data.current_weather.time
+      };
+    }
+
+    async function fetchMetNorwayCurrent(lat, lon) {
+      const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat}&lon=${lon}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('MET Norway request failed.');
+      const data = await res.json();
+      if (!data.properties?.timeseries?.[0]?.data?.instant?.details) return null;
+      const details = data.properties.timeseries[0].data.instant.details;
+      const tempF = details.air_temperature * 9/5 + 32;
+      const windMph = details.wind_speed * 2.23694;
+      return {
+        temperature: tempF,
+        windspeed: windMph,
+        winddirection: details.wind_from_direction || 0,
+        weathercode: null, // We'll rely on Open-Meteo's weathercode
+        time: data.properties.timeseries[0].time
+      };
+    }
+
+    function combineCurrentWeather(openData, metData, weightOpen, weightMet) {
+      if (!openData) return null;
+      if (!metData) return openData;
+
+      const temp = openData.temperature * weightOpen + metData.temperature * weightMet;
+      const wind = openData.windspeed * weightOpen + metData.windspeed * weightMet;
+      const dir = openData.winddirection * weightOpen + metData.winddirection * weightMet;
+      return {
+        temperature: Math.round(temp * 10) / 10,
+        windspeed: Math.round(wind * 10) / 10,
+        winddirection: Math.round(dir),
+        weathercode: openData.weathercode,
+        time: openData.time
+      };
+    }
+
+    async function fetchOpenMeteoForecast(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?
+        latitude=${lat}&longitude=${lon}
+        &daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,
+        precipitation_probability_mean,sunrise,sunset
+        &timezone=auto
+        &forecast_days=7
+        &temperature_unit=fahrenheit
+        &windspeed_unit=mph`
+        .replace(/\s+/g, '');
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.daily) return null;
+      return data.daily;
+    }
+
+    function displayCurrentWeather(locationName, current) {
+      const { temperature, windspeed, winddirection, weathercode, time } = current;
+      const emoji = decodeWeatherEmoji(weathercode);
+      const desc = decodeWeatherCode(weathercode);
+
+      weatherCurrent.innerHTML = `
+        <strong>Current Weather in ${locationName}:</strong>
+        <p><span class="emoji">${emoji}</span> ${desc}</p>
+        <p>Temperature: ${temperature} °F</p>
+        <p>Wind Speed: ${windspeed} mph</p>
+        <p>Wind Direction: ${winddirection}°</p>
+        <p>Updated: ${time}</p>
+      `;
+    }
+
+    function displayWeeklyForecast(daily) {
+      const {
+        time,
+        weathercode,
+        temperature_2m_max,
+        temperature_2m_min,
+        apparent_temperature_max,
+        apparent_temperature_min,
+        precipitation_probability_mean,
+        sunrise,
+        sunset
+      } = daily;
+
+      if (!time || time.length === 0) {
+        weatherForecast.innerHTML = '';
+        return;
+      }
+
+      let tableHTML = `
+        <h3>7-Day Forecast</h3>
+        <table class="forecast-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Condition</th>
+              <th>High / Low (°F)</th>
+              <th>Feels Like (°F)</th>
+              <th>Precip (%)</th>
+              <th>Sunrise</th>
+              <th>Sunset</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      for (let i = 0; i < time.length; i++) {
+        const dateObj = new Date(time[i]);
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const shortDate = dateObj.toLocaleDateString('en-US', {
+          month: 'numeric', day: 'numeric', year: '2-digit'
+        });
+        const emoji = decodeWeatherEmoji(weathercode[i]);
+        const desc = decodeWeatherCode(weathercode[i]);
+
+        tableHTML += `
+          <tr>
+            <td>${dayName} (${shortDate})</td>
+            <td><span class="emoji">${emoji}</span><br>${desc}</td>
+            <td>${temperature_2m_max[i]}° / ${temperature_2m_min[i]}°</td>
+            <td>${Math.round(apparent_temperature_max[i])}° / ${Math.round(apparent_temperature_min[i])}°</td>
+            <td>${precipitation_probability_mean[i] ?? 0}%</td>
+            <td>${sunrise[i]?.substring(11) ?? '—'}</td>
+            <td>${sunset[i]?.substring(11) ?? '—'}</td>
+          </tr>
+        `;
+      }
+
+      tableHTML += `</tbody></table>`;
+      weatherForecast.innerHTML = tableHTML;
+    }
+
+    function showPreferredLocationUI(locationObj) {
+      const storedLocation = JSON.parse(localStorage.getItem('preferredLocation'));
+      if (storedLocation && storedLocation.name === locationObj.name) {
+        preferredLocationDiv.innerHTML = `
+          <span>Your preferred location is <strong>${storedLocation.name}</strong>.</span>
+          <button id="clearLocationBtn">Clear</button>
+        `;
+        document.getElementById('clearLocationBtn').addEventListener('click', clearPreferredLocation);
+      } else {
+        preferredLocationDiv.innerHTML = `
+          <span>You are viewing weather for <strong>${locationObj.name}</strong>.</span>
+          <button id="setLocationBtn">Set as Preferred</button>
+        `;
+        document.getElementById('setLocationBtn').addEventListener('click', () => {
+          localStorage.setItem('preferredLocation', JSON.stringify(locationObj));
+          showPreferredLocationUI(locationObj);
+        });
+      }
+    }
+
+    function clearPreferredLocation() {
+      localStorage.removeItem('preferredLocation');
+      preferredLocationDiv.innerHTML = '';
+    }
+
+    function decodeWeatherCode(code) {
+      const descriptions = {
+        0: 'Clear Sky',
+        1: 'Mainly Clear',
+        2: 'Partly Cloudy',
+        3: 'Overcast',
+        45: 'Fog',
+        48: 'Depositing Rime Fog',
+        51: 'Light Drizzle',
+        53: 'Moderate Drizzle',
+        55: 'Dense Drizzle',
+        56: 'Light Freezing Drizzle',
+        57: 'Dense Freezing Drizzle',
+        61: 'Slight Rain',
+        63: 'Moderate Rain',
+        65: 'Heavy Rain',
+        66: 'Light Freezing Rain',
+        67: 'Heavy Freezing Rain',
+        71: 'Slight Snow Fall',
+        73: 'Moderate Snow Fall',
+        75: 'Heavy Snow Fall',
+        77: 'Snow Grains',
+        80: 'Slight Rain Showers',
+        81: 'Moderate Rain Showers',
+        82: 'Violent Rain Showers',
+        85: 'Slight Snow Showers',
+        86: 'Heavy Snow Showers',
+        95: 'Thunderstorm',
+        96: 'Thunderstorm w/ Light Hail',
+        99: 'Thunderstorm w/ Heavy Hail'
+      };
+      return descriptions[code] || 'Unknown';
+    }
+
+    function decodeWeatherEmoji(code) {
+      if (code === 0) return '☀️';
+      if ([1, 2].includes(code)) return '🌤️';
+      if (code === 3) return '☁️';
+      if (code >= 45 && code <= 48) return '🌫️';
+      if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return '🌧️';
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return '❄️';
+      if ([95, 96, 99].includes(code)) return '⛈️';
+      return '❓';
+    }
+  </script>
+</body>
+</html>
